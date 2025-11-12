@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+.stats-container {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.stat {
+  flex: 1 1 200px;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  color: white;
+  text-align: center;
+  font-weight: bold;
+  transition: transform 0.2s ease;
+}
+
+.stat:hover {
+  transform: scale(1.03);
+}
+
+.stat.total {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+}
+
+.stat.pendientes {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.stat.completadas {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
