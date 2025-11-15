@@ -1,4 +1,4 @@
- import { useState } from "react";
+import { useState } from "react";
 import "./App.css";
 
 export default function App() {
@@ -11,10 +11,14 @@ export default function App() {
   const pendientes = tasks.filter((t) => !t.completed).length;
   const completadas = tasks.filter((t) => t.completed).length;
 
-  const addTask = () => {
+  // 1. Convertí la sección del formulario en un <form> real
+  // y creé esta función para manejar el 'submit'
+  const handleAddTask = (e) => {
+    e.preventDefault(); // Previene que la página se recargue
     if (title.trim() === "" || description.trim() === "") return;
+    
     const task = {
-      id: Date.now(),
+      id: Date.now().toString(), // Usar un string para el ID es más robusto
       title,
       description,
       completed: false,
@@ -46,26 +50,42 @@ export default function App() {
       </section>
 
       <section className="form">
-        <button onClick={() => setShowForm(!showForm)}>
+        {/* 2. MEJORA DE ACCESIBILIDAD:
+          Agregamos 'aria-expanded' para que el lector de pantalla
+          sepa si el formulario está abierto o cerrado.
+        */}
+        <button onClick={() => setShowForm(!showForm)} aria-expanded={showForm}>
           + Nueva Tarea
         </button>
       </section>
 
       {showForm && (
-        <section className="new-task-form">
+        /* 3. MEJORA DE ACCESIBILIDAD:
+          Usamos <form> en lugar de <section> y vinculamos
+          los <label> con los <input> y <textarea>.
+        */
+        <form className="new-task-form" onSubmit={handleAddTask}>
+          
+          {/* Etiqueta para el título */}
+          <label htmlFor="task-title">Título de la tarea</label>
           <input
             type="text"
+            id="task-title" // ID para conectar con el label
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Título de la tarea"
+            placeholder="Ej: Comprar leche"
           />
+
+          {/* Etiqueta para la descripción */}
+          <label htmlFor="task-description">Descripción de la tarea</label>
           <textarea
+            id="task-description" // ID para conectar con el label
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Descripción de la tarea"
+            placeholder="Ej: Por la tarde en el supermercado"
           />
-          <button onClick={addTask}>Agregar</button>
-        </section>
+          <button type="submit">Agregar</button>
+        </form>
       )}
 
       <section className="task-list">
@@ -75,15 +95,25 @@ export default function App() {
           <ul>
             {tasks.map((task) => (
               <li key={task.id} className={task.completed ? "completed" : ""}>
+                
+                {/* --- 4. LA CORRECCIÓN PRINCIPAL --- */}
+
+                {/* Paso A: Agregamos un 'id' único al input */}
                 <input
                   type="checkbox"
+                  id={task.id}
                   checked={task.completed}
                   onChange={() => toggleTask(task.id)}
                 />
-                <div>
+
+                {/* Paso B: Cambiamos el <div> por un <label>
+                  y usamos 'htmlFor' para conectarlo al 'id' del input
+                */}
+                <label htmlFor={task.id}>
                   <strong>{task.title}</strong>
                   <p>{task.description}</p>
-                </div>
+                </label>
+
               </li>
             ))}
           </ul>
@@ -96,4 +126,3 @@ export default function App() {
     </div>
   );
 }
-
