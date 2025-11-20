@@ -1,5 +1,9 @@
-import { useState } from "react";
+// Importamos useState y AHORA TAMBIÉN useEffect
+import { useState, useEffect } from "react";
 import "./App.css";
+
+// La URL de tu API (la que está corriendo en el puerto 5000)
+const API_URL = "http://localhost:5000/api/tasks";
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
@@ -7,36 +11,106 @@ export default function App() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
+  // --- 1. LEER (READ) ---
+  // Usamos useEffect para cargar las tareas de la API cuando la app inicia
+  useEffect(() => {
+    const loadTasks = async () => {
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        // Ojo: MongoDB usa _id. Lo "traducimos" a "id" para React
+        const formattedTasks = data.map(task => ({
+            ...task,
+            id: task._id 
+        }));
+        setTasks(formattedTasks);
+      } catch (err) {
+        console.error("Error cargando tareas:", err);
+      }
+    };
+
+    loadTasks();
+  }, []); // El array vacío [] significa que esto se ejecuta solo 1 vez
+
+  // --- 2. AGREGAR (CREATE) ---
+  const handleAddTask = async (e) => {
+    e.preventDefault();
+    if (title.trim() === "" || description.trim() === "") return;
+
+    const newTask = {
+      title,
+      description,
+    };
+
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newTask),
+      });
+
+      const savedTask = await response.json();
+      
+      // Traducimos el _id a id y lo añadimos al estado de React
+      const formattedTask = { ...savedTask, id: savedTask._id };
+      setTasks([...tasks, formattedTask]);
+      
+      setTitle("");
+      setDescription("");
+      setShowForm(false);
+
+    } catch (err) {
+      console.error("Error agregando tarea:", err);
+    }
+  };
+
+  // --- 3. EDITAR (UPDATE) - Marcar como completada ---
+  // Esta función ahora usa la API (PATCH)
+  const toggleTask = async (id, currentCompleted) => {
+    try {
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: 'PATCH',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ completed: !currentCompleted }) // Enviamos el estado opuesto
+        });
+
+        const updatedTask = await response.json();
+
+        // Actualizamos el estado local en React
+        setTasks(
+            tasks.map((task) =>
+                task.id === id ? { ...task, completed: updatedTask.completed } : task
+            )
+        );
+
+    } catch (err) {
+        console.error("Error actualizando tarea:", err);
+    }
+  };
+
+  // --- 4. ELIMINAR (DELETE) ---
+  // ¡Función nueva!
+  const handleDeleteTask = async (id) => {
+    try {
+        await fetch(`${API_URL}/${id}`, {
+            method: 'DELETE'
+        });
+
+        // Si la API tuvo éxito, eliminamos la tarea del estado de React
+        setTasks(tasks.filter(task => task.id !== id));
+
+    } catch (err) {
+        console.error("Error eliminando tarea:", err);
+    }
+  };
+
+  // --- CÁLCULOS (sin cambios) ---
   const total = tasks.length;
   const pendientes = tasks.filter((t) => !t.completed).length;
   const completadas = tasks.filter((t) => t.completed).length;
 
-  // 1. Convertí la sección del formulario en un <form> real
-  // y creé esta función para manejar el 'submit'
-  const handleAddTask = (e) => {
-    e.preventDefault(); // Previene que la página se recargue
-    if (title.trim() === "" || description.trim() === "") return;
-    
-    const task = {
-      id: Date.now().toString(), // Usar un string para el ID es más robusto
-      title,
-      description,
-      completed: false,
-    };
-    setTasks([...tasks, task]);
-    setTitle("");
-    setDescription("");
-    setShowForm(false); // cerrar formulario después de agregar
-  };
-
-  const toggleTask = (id) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
-    );
-  };
-
+  // --- RENDERIZADO (JSX) ---
+  // ¡Casi igual, solo añadimos el botón de eliminar!
   return (
     <div className="app">
       <header>
@@ -50,36 +124,24 @@ export default function App() {
       </section>
 
       <section className="form">
-        {/* 2. MEJORA DE ACCESIBILIDAD:
-          Agregamos 'aria-expanded' para que el lector de pantalla
-          sepa si el formulario está abierto o cerrado.
-        */}
         <button onClick={() => setShowForm(!showForm)} aria-expanded={showForm}>
           + Nueva Tarea
         </button>
       </section>
 
       {showForm && (
-        /* 3. MEJORA DE ACCESIBILIDAD:
-          Usamos <form> en lugar de <section> y vinculamos
-          los <label> con los <input> y <textarea>.
-        */
         <form className="new-task-form" onSubmit={handleAddTask}>
-          
-          {/* Etiqueta para el título */}
           <label htmlFor="task-title">Título de la tarea</label>
           <input
             type="text"
-            id="task-title" // ID para conectar con el label
+            id="task-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ej: Comprar leche"
           />
-
-          {/* Etiqueta para la descripción */}
           <label htmlFor="task-description">Descripción de la tarea</label>
           <textarea
-            id="task-description" // ID para conectar con el label
+            id="task-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Ej: Por la tarde en el supermercado"
@@ -95,25 +157,26 @@ export default function App() {
           <ul>
             {tasks.map((task) => (
               <li key={task.id} className={task.completed ? "completed" : ""}>
-                
-                {/* --- 4. LA CORRECCIÓN PRINCIPAL --- */}
-
-                {/* Paso A: Agregamos un 'id' único al input */}
                 <input
                   type="checkbox"
                   id={task.id}
                   checked={task.completed}
-                  onChange={() => toggleTask(task.id)}
+                  // ¡Modificado! Le pasamos el ID y el estado actual
+                  onChange={() => toggleTask(task.id, task.completed)}
                 />
-
-                {/* Paso B: Cambiamos el <div> por un <label>
-                  y usamos 'htmlFor' para conectarlo al 'id' del input
-                */}
                 <label htmlFor={task.id}>
                   <strong>{task.title}</strong>
                   <p>{task.description}</p>
                 </label>
 
+                {/* --- ¡BOTÓN NUEVO! --- */}
+                <button 
+                  onClick={() => handleDeleteTask(task.id)}
+                  aria-label={`Eliminar tarea: ${task.title}`}
+                  className="delete-button" // (Puedes añadir estilos para este botón en App.css)
+                >
+                  Eliminar
+                </button>
               </li>
             ))}
           </ul>
