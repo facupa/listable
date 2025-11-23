@@ -111,7 +111,7 @@ app.delete("/api/tasks/:id", async (req, res) => {
         const task = await Task.findByIdAndDelete(req.params.id);
         
         if (task == null) {
-             return res.status(440).json({ message: "No se encontró la tarea" });
+             return res.status(404).json({ message: "No se encontró la tarea" });
         }
 
         res.json({ message: "Tarea eliminada correctamente" });
