@@ -61,6 +61,7 @@ button {
   border-radius: 4px;
   cursor: pointer;
   flex-shrink: 0;
+  width: 99%;
 }
 
 button:hover {
@@ -85,7 +86,7 @@ button:hover {
 
 .completed span {
   text-decoration: line-through;
-  color: gray;
+  color: rgb(249, 244, 244);
 }
 
 footer {
@@ -95,7 +96,7 @@ footer {
   color: #555;
 }
 
-/* 📱 Responsividad */
+/*  Responsividad */
 @media (max-width: 600px) {
   .form {
     flex-direction: column;
@@ -117,32 +118,36 @@ footer {
     width: 100%;
   }
 }
-
- .new-task-form {
+  
+  .new-task-form   {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   background: #f9f9f9;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  border-radius: 4px;
+  margin-bottom: 0.25rem;
+  box-shadow: 0 1px 6px rgba(189, 187, 187, 0.89);
+  max-width: 500px; /* ancho uniforme para todo el bloque */
+   
 }
 
-.new-task-form input,
-.new-task-form textarea {
+ .new-task-form textarea 
+ .new-task-form input,
+ .new-task-form button  { 
+   width: 100%;          /* todos ocupan el mismo ancho */
+  font-size: 1rem;
   padding: 0.5rem;
-  border: 1px solid #ccc;
+  border: 1px solid #cccaca;
   border-radius: 4px;
 }
 
 .new-task-form textarea {
   resize: vertical;
-  min-height: 60px;
+  min-height: 100px;
 }
 
 .new-task-form button {
-  align-self: flex-start;
   background: #007bff;
   color: white;
   border: none;

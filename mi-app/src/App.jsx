@@ -69,6 +69,7 @@ export default function App() {
       )}
 
       <section className="task-list">
+        <h2> Todas las tareas </h2>
         {tasks.length === 0 ? (
           <p>No hay tareas aún.</p>
         ) : (
@@ -91,7 +92,7 @@ export default function App() {
       </section>
 
       <footer>
-        <p>Todas las tareas</p>
+        
       </footer>
     </div>
   );
