@@ -159,3 +159,20 @@ footer {
 .new-task-form button:hover {
   background: #0056b3;
 }
+/* === Ajustes específicos para la lista de tareas === */
+/* Este bloque organiza cada tarea con flexbox y evita que el botón se desborde */
+.task-list li {
+  display: flex;                  /* coloca texto y botón en la misma línea */
+  justify-content: space-between; /* separa el texto del botón */
+  align-items: center;            /* centra verticalmente */
+  flex-wrap: wrap;                /* si el texto es largo, se acomoda sin romper */
+}
+
+/* Estilos del botón Eliminar dentro de cada tarea */
+/* Sobreescribe el estilo global de button (width: 99%) para que no ocupe todo el ancho */
+.task-list li button {
+  width: auto;              /* el botón se ajusta al contenido */
+  padding: 0.4rem 0.8rem;   /* tamaño compacto */
+  font-size: 0.9rem;        /* texto más pequeño que el botón principal */
+  flex-shrink: 0;           /* evita que se achique si el texto es largo */
+}
