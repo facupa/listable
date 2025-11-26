@@ -1,26 +1,24 @@
-require('dotenv').config(); // <--- LÍNEA NUEVA (Línea 1)
-// 1. Importar las dependencias (ESTO ES DE TU BASE ORIGINAL)
+require('dotenv').config(); 
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
-// 2. Inicializar la app de Express (ESTO ES DE TU BASE ORIGINAL)
+// Inicializar la app
 const app = express();
 const PORT = 5000; 
 
-// 3. Configurar "Middlewares" (ESTO ES DE TU BASE ORIGINAL)
+// Middlewares
 app.use(cors()); 
 app.use(express.json()); 
 
-// 4. Conectar a MongoDB Atlas (ESTO ES DE TU BASE ORIGINAL)
-// ¡¡ASEGÚRATE DE QUE AQUÍ ESTÉ TU LLAVE REAL!!
+// Conexión a MongoDB
 const MONGO_URI = process.env.MONGO_URI;
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log("¡Conectado a MongoDB!"))
   .catch((err) => console.error("Error al conectar a MongoDB:", err));
 
-// 5. Definir el "Esquema" y "Modelo" de la Tarea (ESTO ES DE TU BASE ORIGINAL)
+// --- ESQUEMA CON FECHAS AUTOMÁTICAS ---
 const taskSchema = new mongoose.Schema({
   title: String,
   description: String,
@@ -28,19 +26,15 @@ const taskSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+}, { 
+  timestamps: true // <--- ESTA LÍNEA HACE LA MAGIA (crea 'createdAt' y 'updatedAt')
 });
 
 const Task = mongoose.model("Task", taskSchema); 
 
-// ---------------------------------------------------------------
-// 6. Definir las rutas de la API (CRUD Completo)
-// ---------------------------------------------------------------
+// --- RUTAS DE LA API ---
 
-/*
- * @ruta   GET /api/tasks
- * @desc   Obtener todas las tareas (LEER)
- * (Esta ruta ya la tenías en la v1)
- */
+// 1. OBTENER TODAS LAS TAREAS
 app.get("/api/tasks", async (req, res) => {
   try {
     const tasks = await Task.find(); 
@@ -50,11 +44,7 @@ app.get("/api/tasks", async (req, res) => {
   }
 });
 
-/*
- * @ruta   POST /api/tasks
- * @desc   Añadir una nueva tarea (AGREGAR / CREAR)
- * (Esta ruta ya la tenías en la v1)
- */
+// 2. CREAR UNA TAREA
 app.post("/api/tasks", async (req, res) => {
   const task = new Task({
     title: req.body.title,
@@ -69,11 +59,7 @@ app.post("/api/tasks", async (req, res) => {
   }
 });
 
-/*
- * @ruta   PATCH /api/tasks/:id
- * @desc   Actualizar una tarea (EDITAR / ACTUALIZAR)
- * (Esta es la ruta MEJORADA que reemplaza a tu 'PUT' anterior)
- */
+// 3. ACTUALIZAR UNA TAREA (Título, descripción o estado)
 app.patch("/api/tasks/:id", async (req, res) => {
     try {
         const task = await Task.findById(req.params.id);
@@ -100,12 +86,7 @@ app.patch("/api/tasks/:id", async (req, res) => {
     }
 });
 
-
-/*
- * @ruta   DELETE /api/tasks/:id
- * @desc   Eliminar una tarea (ELIMINAR)
- * (Esta es la ruta NUEVA que añadimos)
- */
+// 4. ELIMINAR UNA TAREA
 app.delete("/api/tasks/:id", async (req, res) => {
     try {
         const task = await Task.findByIdAndDelete(req.params.id);
@@ -121,8 +102,7 @@ app.delete("/api/tasks/:id", async (req, res) => {
     }
 });
 
-
-// 7. Iniciar el servidor (ESTO ES DE TU BASE ORIGINAL)
+// Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

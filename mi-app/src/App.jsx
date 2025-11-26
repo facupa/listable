@@ -8,52 +8,50 @@ export default function App() {
   const [tasks, setTasks] = useState([]);
   const [showForm, setShowForm] = useState(false);
   
-  // Estados para crear nueva tarea
+  // Estados para nueva tarea
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  // === ESTADOS PARA EDICIÓN ===
+  // Estados para editar tarea
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
 
   // --- 1. LEER (READ) ---
   useEffect(() => {
-    const loadTasks = async () => {
-      try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        // Normalizamos _id a id
-        const formattedTasks = data.map(task => ({
-            ...task,
-            id: task._id 
-        }));
-        setTasks(formattedTasks);
-      } catch (err) {
-        console.error("Error cargando tareas:", err);
-      }
-    };
-
     loadTasks();
   }, []);
+
+  const loadTasks = async () => {
+    try {
+      const response = await fetch(API_URL);
+      const data = await response.json();
+      // Normalizamos _id a id para que React no se queje
+      const formattedTasks = data.map(task => ({
+          ...task,
+          id: task._id 
+      }));
+      setTasks(formattedTasks);
+    } catch (err) {
+      console.error("Error cargando tareas:", err);
+    }
+  };
 
   // --- 2. AGREGAR (CREATE) ---
   const handleAddTask = async (e) => {
     e.preventDefault();
-    if (title.trim() === "" || description.trim() === "") return;
-
-    const newTask = { title, description };
+    if (!title.trim() || !description.trim()) return;
 
     try {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newTask),
+        body: JSON.stringify({ title, description }),
       });
 
       const savedTask = await response.json();
-      const formattedTask = { ...savedTask, id: savedTask._id };
-      setTasks([...tasks, formattedTask]);
+      // Agregamos la nueva tarea a la lista (incluyendo su fecha de creación)
+      setTasks([...tasks, { ...savedTask, id: savedTask._id }]);
       
       setTitle("");
       setDescription("");
@@ -134,6 +132,15 @@ export default function App() {
     }
   };
 
+  // --- HELPER: Formatear Fecha ---
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    return new Date(dateString).toLocaleString('es-ES', {
+      day: '2-digit', month: '2-digit', year: 'numeric', 
+      hour: '2-digit', minute: '2-digit'
+    });
+  };
+
   // --- CÁLCULOS ---
   const total = tasks.length;
   const pendientes = tasks.filter((t) => !t.completed).length;
@@ -146,20 +153,20 @@ export default function App() {
       </header>
 
       <section className="stats-vertical">
-        <div className="stat"> Total de Tareas: {total}</div>
+        <div className="stat"> Total: {total}</div>
         <div className="stat"> Pendientes: {pendientes}</div>
         <div className="stat"> Completadas: {completadas}</div>
       </section>
 
       <section className="form">
-        <button onClick={() => setShowForm(!showForm)} aria-expanded={showForm}>
+        <button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cerrar formulario" : "+ Nueva Tarea"}
         </button>
       </section>
 
       {showForm && (
         <form className="new-task-form" onSubmit={handleAddTask}>
-          <label htmlFor="task-title">Título de la tarea</label>
+          <label htmlFor="task-title">Título</label>
           <input
             type="text"
             id="task-title"
@@ -167,12 +174,12 @@ export default function App() {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ej: Comprar leche"
           />
-          <label htmlFor="task-description">Descripción de la tarea</label>
+          <label htmlFor="task-description">Descripción</label>
           <textarea
             id="task-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Ej: Por la tarde en el supermercado"
+            placeholder="Ej: Marca X, 2 litros..."
           />
           <button type="submit">Agregar</button>
         </form>
@@ -207,13 +214,13 @@ export default function App() {
                     <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
                       <button 
                         onClick={() => saveEdit(task.id)} 
-                        style={{ backgroundColor: '#28a745', flex: 1 }}
+                        style={{ backgroundColor: '#28a745', flex: 1, color: 'white', border: 'none', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer' }}
                       >
                         Guardar
                       </button>
                       <button 
                         onClick={cancelEditing} 
-                        style={{ backgroundColor: '#6c757d', flex: 1 }}
+                        style={{ backgroundColor: '#6c757d', flex: 1, color: 'white', border: 'none', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer' }}
                       >
                         Cancelar
                       </button>
@@ -235,23 +242,28 @@ export default function App() {
                         <p style={{ margin: '0.2rem 0 0 0', color: '#555', fontSize: '0.9rem' }}>
                           {task.description}
                         </p>
+                        
+                        {/* AQUI SE MUESTRA LA FECHA */}
+                        {task.createdAt && (
+                          <small style={{ display: 'block', color: '#888', marginTop: '4px', fontSize: '0.75rem' }}>
+                            📅 {formatDate(task.createdAt)}
+                          </small>
+                        )}
                       </label>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginLeft: '0.5rem' }}>
                       <button 
                         onClick={() => startEditing(task)}
-                        aria-label={`Editar tarea: ${task.title}`}
-                        style={{ backgroundColor: '#ffc107', color: '#333', fontSize: '0.8rem', padding: '0.3rem 0.6rem' }}
+                        style={{ backgroundColor: '#ffc107', color: '#333', fontSize: '0.8rem', padding: '0.4rem 0.8rem', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                       >
                         Editar
                       </button>
                       
                       <button 
                         onClick={() => handleDeleteTask(task.id)}
-                        aria-label={`Eliminar tarea: ${task.title}`}
                         className="delete-button"
-                        style={{ backgroundColor: '#dc3545', fontSize: '0.8rem', padding: '0.3rem 0.6rem' }}
+                        style={{ backgroundColor: '#dc3545', color: 'white', fontSize: '0.8rem', padding: '0.4rem 0.8rem', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                       >
                         Eliminar
                       </button>
