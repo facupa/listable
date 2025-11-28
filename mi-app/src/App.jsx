@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
-// La URL de tu API
+// La URL de la API
 const API_URL = "http://localhost:5000/api/tasks";
 
 export default function App() {
@@ -207,6 +207,7 @@ export default function App() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ej: Comprar leche"
+            autoFocus // <--- CORRECCIÓN APLICADA: FOCO AUTOMÁTICO
           />
           <label htmlFor="task-description">Descripción</label>
           <textarea
