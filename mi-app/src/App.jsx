@@ -8,7 +8,7 @@ export default function App() {
   const [tasks, setTasks] = useState([]);
   const [showForm, setShowForm] = useState(false);
   
-  // --- NUEVO: Estado para notificaciones a lectores de pantalla (ARIA Live Region) ---
+  // --- Estado para notificaciones a lectores de pantalla (ARIA Live Region) ---
   const [statusMessage, setStatusMessage] = useState("");
 
   // Estados para nueva tarea
@@ -53,9 +53,9 @@ export default function App() {
       });
 
       const savedTask = await response.json();
+      // Guardamos la tarea nueva (que ya viene con createdAt)
       setTasks([...tasks, { ...savedTask, id: savedTask._id }]);
       
-      // Feedback auditivo
       setStatusMessage(`Tarea "${savedTask.title}" agregada correctamente.`);
 
       setTitle("");
@@ -78,11 +78,15 @@ export default function App() {
 
         const updatedTask = await response.json();
 
+        // IMPORTANTE: Ahora actualizamos también 'updatedAt' desde la respuesta
         setTasks(tasks.map((task) =>
-            task.id === id ? { ...task, completed: updatedTask.completed } : task
+            task.id === id ? { 
+              ...task, 
+              completed: updatedTask.completed,
+              updatedAt: updatedTask.updatedAt // <--- Actualiza la fecha
+            } : task
         ));
         
-        // Feedback auditivo
         setStatusMessage(
           updatedTask.completed 
             ? `Tarea "${updatedTask.title}" marcada como completada.` 
@@ -96,7 +100,6 @@ export default function App() {
 
   // --- 4. ELIMINAR (DELETE) ---
   const handleDeleteTask = async (id) => {
-    // Capturamos el título antes de borrar para el mensaje
     const taskToDelete = tasks.find(t => t.id === id);
     const taskTitle = taskToDelete ? taskToDelete.title : "seleccionada";
 
@@ -106,7 +109,6 @@ export default function App() {
         });
         setTasks(tasks.filter(task => task.id !== id));
         
-        // Feedback auditivo
         setStatusMessage(`Tarea "${taskTitle}" eliminada correctamente.`);
 
     } catch (err) {
@@ -121,7 +123,6 @@ export default function App() {
     setEditingId(task.id);
     setEditTitle(task.title);
     setEditDesc(task.description);
-    // Limpiamos mensaje anterior para evitar confusiones
     setStatusMessage(""); 
   };
 
@@ -145,12 +146,17 @@ export default function App() {
 
       const updatedTask = await response.json();
 
+      // IMPORTANTE: Actualizamos título, descripción Y fecha
       setTasks(tasks.map((task) => 
-        task.id === id ? { ...task, title: updatedTask.title, description: updatedTask.description } : task
+        task.id === id ? { 
+          ...task, 
+          title: updatedTask.title, 
+          description: updatedTask.description,
+          updatedAt: updatedTask.updatedAt // <--- Actualiza la fecha
+        } : task
       ));
 
       setEditingId(null);
-      // Feedback auditivo
       setStatusMessage(`Tarea "${updatedTask.title}" actualizada correctamente.`);
 
     } catch (err) {
@@ -159,6 +165,7 @@ export default function App() {
     }
   };
 
+  // Helper para formatear fechas
   const formatDate = (dateString) => {
     if (!dateString) return "";
     return new Date(dateString).toLocaleString('es-ES', {
@@ -178,8 +185,7 @@ export default function App() {
         <h1>Mi Lista de Tareas</h1>
       </header>
 
-      {/* --- LIVE REGION: El "altavoz" invisible para lectores de pantalla --- */}
-      {/* aria-live="polite" significa que esperará a que el usuario termine de hacer algo para hablar */}
+      {/* --- LIVE REGION (Accesibilidad) --- */}
       <div className="sr-only" role="status" aria-live="polite">
         {statusMessage}
       </div>
@@ -207,7 +213,7 @@ export default function App() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ej: Comprar leche"
-            autoFocus // <--- CORRECCIÓN APLICADA: FOCO AUTOMÁTICO
+            autoFocus 
           />
           <label htmlFor="task-description">Descripción</label>
           <textarea
@@ -289,6 +295,7 @@ export default function App() {
                         checked={task.completed}
                         onChange={() => toggleTask(task.id, task.completed)}
                         style={{ marginTop: '0.3rem' }}
+                        aria-label={`Marcar ${task.title} como ${task.completed ? 'pendiente' : 'completada'}`}
                       />
                       <label htmlFor={`check-${task.id}`} style={{ cursor: 'pointer', flex: 1 }}>
                         <strong style={{ display: 'block', fontSize: '1.1rem' }}>{task.title}</strong>
@@ -296,11 +303,22 @@ export default function App() {
                           {task.description}
                         </p>
                         
-                        {task.createdAt && (
-                          <small style={{ display: 'block', color: '#888', marginTop: '4px', fontSize: '0.75rem' }}>
-                            📅 {formatDate(task.createdAt)}
-                          </small>
-                        )}
+                        {/* --- SECCIÓN DE FECHAS MEJORADA --- */}
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#888' }}>
+                          {task.createdAt && (
+                            <span style={{ display: 'block' }}>
+                              📅 Creado: {formatDate(task.createdAt)}
+                            </span>
+                          )}
+                          
+                          {/* Solo mostramos "Actualizado" si las fechas son diferentes */}
+                          {task.updatedAt && task.createdAt !== task.updatedAt && (
+                            <span style={{ display: 'block', color: '#007bff', fontWeight: 'bold', marginTop: '0.2rem' }}>
+                              📝 Actualizado: {formatDate(task.updatedAt)}
+                            </span>
+                          )}
+                        </div>
+
                       </label>
                     </div>
 
