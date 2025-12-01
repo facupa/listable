@@ -1,7 +1,8 @@
- body {
+body {
   margin: 0;
   font-family: sans-serif;
   background: #f0f2f5;
+  color: #333;
 }
 
 .app {
@@ -18,27 +19,55 @@ header {
   padding: 1.5rem;
   text-align: center;
   border-radius: 8px;
+  margin-bottom: 1rem;
 }
 
+/* === SECCIÓN DE ESTADÍSTICAS (ACCESIBILIDAD MEJORADA) === */
+/* Reemplaza los estilos antiguos de .stat por una estructura de lista semántica */
+
 .stats-vertical {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
   background: #e9ecef;
   padding: 1rem;
   border-radius: 8px;
-  margin: 1rem 0;
+  margin-bottom: 1.5rem;
 }
 
-.stat {
-  font-weight: bold;
-  font-size: 1.1rem;
-  padding: 0.5rem;
+/* Eliminamos viñetas y reseteamos padding para la lista de estadísticas */
+.stats-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap; /* Permite que se adapten en pantallas pequeñas */
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+/* Estilo de tarjeta para cada ítem de estadística */
+.stat-item {
   background: white;
-  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  flex: 1 1 auto; /* Crecen para ocupar espacio disponible uniformemente */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  color: #333;
+  border: 1px solid #dee2e6; /* Borde sutil para modo alto contraste */
 }
 
+/* Mejora de contraste para los números (WCAG Criterio 1.4.3) */
+/* Usamos un azul más oscuro (#0056b3) en lugar del estándar para asegurar ratio 4.5:1 */
+.stat-item strong {
+  font-weight: 800;
+  color: #0056b3;
+  font-size: 1.2rem;
+}
+
+/* === FORMULARIOS GENERALES === */
 .form {
   display: flex;
   flex-wrap: wrap;
@@ -46,11 +75,9 @@ header {
   margin-bottom: 1rem;
 }
 
-input[type="text"] {
-  flex: 1 1 300px;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+input[type="text"],
+textarea {
+  font-family: inherit;
 }
 
 button {
@@ -60,14 +87,62 @@ button {
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
-  flex-shrink: 0;
-  width: 99%;
+  font-size: 1rem;
 }
 
 button:hover {
   background: #0056b3;
 }
 
+/* Foco visible para navegación por teclado (WCAG Criterio 2.4.7) */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #0056b3;
+  outline-offset: 2px;
+}
+
+/* === FORMULARIO DE NUEVA TAREA === */
+.new-task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  border: 1px solid #e0e0e0;
+}
+
+.new-task-form label {
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.new-task-form input,
+.new-task-form textarea {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; /* Asegura que el padding no desborde el ancho */
+}
+
+.new-task-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.new-task-form button {
+  align-self: flex-start;
+  width: auto;
+  min-width: 120px;
+}
+
+/* === LISTA DE TAREAS === */
 .task-list ul {
   list-style: none;
   padding: 0;
@@ -75,113 +150,45 @@ button:hover {
 
 .task-list li {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
   background: white;
-  padding: 0.5rem;
-  border-radius: 4px;
+  padding: 1rem;
+  border-radius: 6px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
 }
 
+/* Estilos para tareas completadas */
 .completed strong,
-.completed p,
-.completed small {
+.completed p {
   text-decoration: line-through;
-  /* Usamos #595959 que tiene un ratio de contraste de 7:1 contra blanco (Pasa AAA) */
-  /* Usamos !important para asegurarnos de sobrescribir los estilos en línea de React */
-  color: #595959 !important; 
+  /* Gris oscuro (#595959) para cumplir ratio de contraste 4.5:1 */
+  color: #595959; 
 }
 
-footer {
-  text-align: center;
-  margin-top: 2rem;
-  font-weight: bold;
-  color: #555;
-}
-
-/*  Responsividad */
-@media (max-width: 600px) {
-  .form {
-    flex-direction: column;
-  }
-
-  .stats-vertical {
-    padding: 0.5rem;
-  }
-
-  .stat {
-    font-size: 1rem;
-  }
-
-  input[type="text"] {
-    width: 100%;
-  }
-
-  button {
-    width: 100%;
-  }
-}
-  
-  .new-task-form   {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  background: #f9f9f9;
-  padding: 1.5rem;
-  border-radius: 4px;
-  margin-bottom: 0.25rem;
-  box-shadow: 0 1px 6px rgba(189, 187, 187, 0.89);
-  max-width: 500px; /* ancho uniforme para todo el bloque */
-   
-}
-
- .new-task-form textarea 
- .new-task-form input,
- .new-task-form button  { 
-   width: 100%;          /* todos ocupan el mismo ancho */
-  font-size: 1rem;
-  padding: 0.5rem;
-  border: 1px solid #cccaca;
-  border-radius: 4px;
-}
-
-.new-task-form textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-.new-task-form button {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.new-task-form button:hover {
-  background: #0056b3;
-}
-/* === Ajustes específicos para la lista de tareas === */
-/* Este bloque organiza cada tarea con flexbox y evita que el botón se desborde */
-.task-list li {
-  display: flex;                  /* coloca texto y botón en la misma línea */
-  justify-content: space-between; /* separa el texto del botón */
-  align-items: center;            /* centra verticalmente */
-  flex-wrap: wrap;                /* si el texto es largo, se acomoda sin romper */
-}
-
-/* Estilos del botón Eliminar dentro de cada tarea */
-/* Sobreescribe el estilo global de button (width: 99%) para que no ocupe todo el ancho */
+/* Botones dentro de la lista de tareas */
 .task-list li button {
-  width: auto;              /* el botón se ajusta al contenido */
-  padding: 0.4rem 0.8rem;   /* tamaño compacto */
-  font-size: 0.9rem;        /* texto más pequeño que el botón principal */
-  flex-shrink: 0;           /* evita que se achique si el texto es largo */
+  width: auto;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  flex-shrink: 0;
 }
 
-/* Clase de utilidad para ocultar contenido visualmente pero mantenerlo accesible */
+/* Botón eliminar específico */
+.delete-button {
+  background-color: #dc3545;
+}
+.delete-button:hover {
+  background-color: #bd2130;
+}
+
+/* === UTILIDADES === */
+
+/* Clase para ocultar contenido visualmente pero mantenerlo para lectores de pantalla */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -192,4 +199,107 @@ footer {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+footer {
+  text-align: center;
+  margin-top: 2rem;
+  font-weight: bold;
+  color: #555;
+}
+
+/* === RESPONSIVIDAD === */
+@media (max-width: 600px) {
+  .app {
+    padding: 1rem;
+  }
+
+  .form {
+    flex-direction: column;
+  }
+  
+  /* Ajuste de estadísticas en móvil para que se apilen */
+  .stats-list {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .stat-item {
+    width: 100%;
+    justify-content: space-between; /* Separa texto del número a los extremos */
+    box-sizing: border-box;
+  }
+
+  input[type="text"],
+  button {
+    width: 100%;
+  }
+  
+  /* En móvil, los botones de la lista de tareas ocupan ancho completo para facilitar toque */
+  .task-list li button {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+  
+  .task-list li {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* --- Estilos de Autenticación (Login/Register) --- */
+.auth-container {
+  max-width: 400px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  text-align: center;
+  border: 1px solid #ddd;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.auth-form input {
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc; /* Oscurecido para mejor contraste */
+  border-radius: 4px;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 1rem;
+  width: auto;
+  padding: 0.5rem; /* Aumentado área de clic */
+  display: inline-block;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24; /* Contraste suficiente */
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border: 1px solid #f5c6cb;
+}
+
+.success-message {
+  background-color: #d4edda;
+  color: #155724; /* Contraste suficiente */
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border: 1px solid #c3e6cb;
 }
