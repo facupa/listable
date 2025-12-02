@@ -18,32 +18,32 @@ export default function App() {
   // Estados para formularios
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  
-  // Estados de edición
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
 
-  // 🔍 Referencia para gestionar la devolución del foco al terminar de editar
-  const prevEditingIdRef = useRef(null);
+  // Referencias para gestión de foco
+  const editInputRef = useRef(null);
 
+  // Cargar tareas al iniciar si hay token
   useEffect(() => {
     if (token) loadTasks();
   }, [token]);
 
-  // 🔍 EFECTO PARA GESTIÓN DEL FOCO (WCAG 2.4.3)
-  // Cuando editingId pasa de tener un valor a null (se cierra la edición),
-  // buscamos el botón "Editar" de esa tarea y le devolvemos el foco.
+  // Enfocar el input de edición cuando se abre
   useEffect(() => {
-    if (prevEditingIdRef.current !== null && editingId === null) {
-      const editButton = document.getElementById(`btn-edit-${prevEditingIdRef.current}`);
-      if (editButton) {
-        editButton.focus();
-      }
+    if (editingId && editInputRef.current) {
+      editInputRef.current.focus();
     }
-    // Guardamos el ID actual para la próxima comparación
-    prevEditingIdRef.current = editingId;
   }, [editingId]);
+
+  // --- AUTO-OCULTAR NOTIFICACIÓN VISUAL ---
+  useEffect(() => {
+    if (statusMessage) {
+      const timer = setTimeout(() => setStatusMessage(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [statusMessage]);
 
   // --- FUNCIONES DE AUTENTICACIÓN ---
   const handleLogin = (newToken) => {
@@ -83,11 +83,7 @@ export default function App() {
 
   const handleAddTask = async (e) => {
     e.preventDefault();
-    // 🔍 Validación visual y semántica (WCAG 3.3.1)
-    if (!title.trim()) {
-      setStatusMessage("Error: El título de la tarea es obligatorio.");
-      return;
-    }
+    if (!title.trim()) return;
 
     try {
       const response = await fetch(API_URL, {
@@ -113,7 +109,6 @@ export default function App() {
       });
       if (response.ok) {
         const updated = await response.json();
-        
         setTasks(tasks.map(t => t.id === id ? { 
           ...t, 
           completed: updated.completed, 
@@ -127,9 +122,6 @@ export default function App() {
 
   const handleDeleteTask = async (id) => {
     const taskToDelete = tasks.find(t => t.id === id);
-    // Confirmación nativa accesible (simple pero efectiva)
-    if (!window.confirm(`¿Estás seguro de eliminar la tarea "${taskToDelete?.title}"?`)) return;
-
     try {
       const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
       if (response.ok) {
@@ -144,7 +136,7 @@ export default function App() {
     setEditingId(task.id);
     setEditTitle(task.title);
     setEditDesc(task.description);
-    setStatusMessage(""); // Limpiar mensajes previos
+    setStatusMessage("");
   };
 
   const cancelEditing = () => {
@@ -153,11 +145,6 @@ export default function App() {
   };
 
   const saveEdit = async (id) => {
-    if (!editTitle.trim()) {
-      setStatusMessage("Error: El título no puede estar vacío.");
-      return;
-    }
-
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: 'PATCH',
@@ -166,7 +153,6 @@ export default function App() {
       });
       if (response.ok) {
         const updated = await response.json();
-        
         setTasks(tasks.map(t => t.id === id ? { 
           ...t, 
           title: updated.title, 
@@ -180,15 +166,19 @@ export default function App() {
     } catch (err) { console.error(err); }
   };
 
-  const formatDate = (d) => d ? new Date(d).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : "";
+  const formatDate = (d) => d ? new Date(d).toLocaleString('es-ES', { 
+    day: '2-digit', month: '2-digit', year: 'numeric', 
+    hour: '2-digit', minute: '2-digit'
+  }) : "";
 
-  // --- RENDERIZADO ---
+  // --- RENDERIZADO CONDICIONAL ---
   if (!token) {
     return showRegister 
       ? <Register onSwitchToLogin={() => setShowRegister(false)} />
       : <Login onLogin={handleLogin} onSwitchToRegister={() => setShowRegister(true)} />;
   }
 
+  // Cálculos
   const total = tasks.length;
   const pendientes = tasks.filter(t => !t.completed).length;
   const completadas = tasks.filter(t => t.completed).length;
@@ -206,41 +196,27 @@ export default function App() {
         </button>
       </header>
 
-      {/* Región de notificaciones (status) única */}
-      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+      {/* 1. CANAL AUDITIVO (Invisible y Permanente para que aria-live funcione siempre) */}
+      <div className="sr-only" role="status" aria-live="polite">
         {statusMessage}
       </div>
 
-      {/* Estadísticas sin aria-live para evitar ruido excesivo */}
-      <section 
-        className="stats-vertical" 
-        aria-labelledby="stats-heading"
-      >
+      {/* 2. CANAL VISUAL (El Toast flotante) */}
+      {statusMessage && (
+        <div className="toast-notification" aria-hidden="true">
+          {statusMessage}
+        </div>
+      )}
+
+      <section className="stats-vertical" aria-labelledby="stats-heading">
         <h2 id="stats-heading" className="sr-only">Estadísticas de progreso</h2>
-        <ul className="stats-list">
-          <li className="stat-item">
-            <span aria-hidden="true" style={{ marginRight: '5px' }}>📋</span> 
-            <span>Total: <strong>{total}</strong></span>
-          </li>
-          <li className="stat-item">
-            <span aria-hidden="true" style={{ marginRight: '5px' }}>⏳</span>
-            <span>Pendientes: <strong>{pendientes}</strong></span>
-          </li>
-          <li className="stat-item">
-            <span aria-hidden="true" style={{ marginRight: '5px' }}>✅</span>
-            <span>Completadas: <strong>{completadas}</strong></span>
-          </li>
-        </ul>
+        <div className="stat">Total: {total} | Pendientes: {pendientes} | Completadas: {completadas}</div>
       </section>
 
-      {/* 🔍 BOTÓN NUEVA TAREA: Verificación de aria-expanded */}
       <section className="form" aria-labelledby="form-heading">
         <h2 id="form-heading" className="sr-only">Administrar tareas</h2>
         <button 
           onClick={() => setShowForm(!showForm)} 
-          /* WCAG 4.1.2: aria-expanded indica si el panel colapsable está abierto o cerrado.
-             El valor cambia dinámicamente (true/false) con el estado showForm.
-          */
           aria-expanded={showForm} 
           aria-controls="add-task-form"
         >
@@ -257,7 +233,6 @@ export default function App() {
             value={title} 
             onChange={e => setTitle(e.target.value)} 
             placeholder="Ej: Comprar pan"
-            /* WCAG 2.4.3: Al abrir, el foco viaja aquí automáticamente */
             autoFocus 
           />
           <label htmlFor="t-desc">Descripción</label>
@@ -265,7 +240,7 @@ export default function App() {
             id="t-desc" 
             value={description} 
             onChange={e => setDescription(e.target.value)} 
-            placeholder="Detalles..."
+            placeholder="Detalles..." 
           />
           <button type="submit">Agregar</button>
         </form>
@@ -280,7 +255,7 @@ export default function App() {
               <li key={task.id} className={task.completed ? "completed" : ""}>
                 
                 {editingId === task.id ? (
-                  // --- FORMULARIO DE EDICIÓN EN LÍNEA ---
+                  // MODO EDICIÓN
                   <form 
                     className="edit-form" 
                     onSubmit={(e) => { e.preventDefault(); saveEdit(task.id); }} 
@@ -288,11 +263,11 @@ export default function App() {
                   >
                     <label htmlFor={`et-${task.id}`} className="sr-only">Editar título</label>
                     <input 
+                      ref={editInputRef} 
                       id={`et-${task.id}`} 
                       type="text" 
                       value={editTitle} 
                       onChange={e => setEditTitle(e.target.value)} 
-                      autoFocus 
                       style={{ padding: '0.5rem' }} 
                     />
                     <label htmlFor={`ed-${task.id}`} className="sr-only">Editar descripción</label>
@@ -308,7 +283,7 @@ export default function App() {
                     </div>
                   </form>
                 ) : (
-                  // --- VISTA DE TAREA ---
+                  // MODO VISTA
                   <>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', flex: 1 }}>
                       <input 
@@ -335,12 +310,7 @@ export default function App() {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginLeft: '0.5rem' }}>
-                      {/* 🔍 BOTÓN EDITAR: 
-                          1. Agregamos un ID único (id={`btn-edit-${task.id}`}) para poder devolverle el foco después.
-                          2. NO usamos aria-expanded aquí porque el botón desaparece al activarse (se reemplaza por el form).
-                      */}
                       <button 
-                        id={`btn-edit-${task.id}`}
                         onClick={() => startEditing(task)} 
                         aria-label={`Editar tarea: ${task.title}`}
                         style={{ backgroundColor: '#ffc107', color: '#333', fontSize: '0.8rem', padding: '0.4rem' }}
