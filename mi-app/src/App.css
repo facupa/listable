@@ -1,3 +1,165 @@
+/*
+Descripción general
+  ------------------
+  Este archivo contiene los estilos principales para una pequeña aplicación de lista de tareas
+  con componentes accesibles: encabezado, estadísticas, formularios, lista de tareas,
+  autenticación y notificaciones. Está organizado en secciones con enfoque
+  en accesibilidad (contraste, foco visible) y responsividad.
+
+  Estructura HTML recomendada (resumen)
+  ------------------------------------
+  <div class="app">
+    <header>...</header>
+
+    <section class="stats-vertical">
+      <ul class="stats-list">
+        <li class="stat-item"><span class="label">...</span><strong>42</strong></li>
+        ...
+      </ul>
+    </section>
+
+    <form class="new-task-form"> ... </form>
+
+    <section class="task-list">
+      <ul>
+        <li>
+          <div>
+            <strong>Title</strong>
+            <p>Description</p>
+          </div>
+          <div>
+            <button class="complete">Complete</button>
+            <button class="delete-button">Delete</button>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <div class="auth-container">
+      <form class="auth-form"> ... </form>
+    </div>
+
+    <div class="toast-notification" role="status" aria-live="polite">...</div>
+
+    <footer>...</footer>
+  </div>
+
+  Descripción de clases y propósito
+  --------------------------------
+  .app
+    - Contenedor principal con ancho máximo y centrado.
+  header
+    - Cabecera destacada de la aplicación.
+
+  .stats-vertical
+    - Contenedor para la sección de estadísticas, enfoque visual y agrupación.
+
+  .stats-list
+    - Lista semántica (ul) sin viñetas que distribuye elementos mediante flexbox.
+    - Uso: agrupar .stat-item.
+
+  .stat-item
+    - Tarjeta por cada estadística; incluye alineado centrado y borde sutil.
+  .stat-item strong
+    - Estilo para el número principal de cada estadística (contraste aumentado).
+
+  .form
+    - Estilo base reutilizable para formularios (flexbox, espaciado).
+
+  input[type="text"], textarea
+    - Fuentes heredadas para consistencia visual.
+
+  button
+    - Botón primario con comportamiento hover y foco accesible (focus-visible).
+
+  .new-task-form
+    - Formulario específico para creación de tareas (columna, límites de ancho).
+    - Incluye estilos para label, input, textarea y botón de envío.
+
+  .task-list ul, .task-list li
+    - Lista de tareas sin marcadores; cada li actúa como tarjeta con acciones.
+  .completed
+    - Estado visual para tareas completadas (tachado y color con contraste adecuado).
+
+  .delete-button
+    - Botón de peligro para eliminar, con color específico y hover.
+
+  .sr-only
+    - Utilidad para esconder visualmente contenidos pero mantenerlos accesibles a lectores de pantalla.
+
+  footer
+    - Pie de página simple centrado.
+
+  @media (max-width: 600px)
+    - Ajustes para pantallas pequeñas: apilar estadísticas, formularios en columna,
+      botones de tarea a ancho completo y espaciados adaptados.
+
+  .auth-container, .auth-form
+    - Contenedor y formulario para autenticación (login/register) con límites de ancho
+      y estilos accesibles. Incluye .error-message y .success-message para feedback.
+
+  .link-button
+    - Botón que parece enlace, con área de clic aumentada y estilo subrayado.
+
+  .toast-notification
+    - Notificación fija en la parte inferior central con animación de entrada
+      (slideUpFade) y rol/atributos ARIA recomendados para comunicar estados.
+
+  Accesibilidad (a tener en cuenta)
+  ---------------------------------
+  - Contraste: colores de texto y números ajustados para cumplir WCAG (ej. ratio >= 4.5:1).
+  - Foco: outline visible usando :focus-visible para navegación por teclado.
+  - Lectores de pantalla: usar .sr-only para etiquetas adicionales; la notificación
+    debe tener role="status" y aria-live="polite" para anunciarse sin interrumpir.
+  - Semántica: usar listas (<ul>/<li>) para estadísticas y tareas; usar <form>,
+    <label> y controles nativos para mejores interacciones y compatibilidad con
+    tecnologías de asistencia.
+  - Tamaños táctiles: botones y enlaces tienen padding adecuado, y en móvil se llevan
+    a ancho completo para facilitar toques.
+
+  Internacionalización y localización
+  ----------------------------------
+  - Evitar usar imágenes con texto; preferir contenido textual para que pueda
+    traducirse fácilmente.
+  - Mantener estructuras semánticas para que la traducción de etiquetas no rompa el layout.
+
+  Temas y personalización
+  -----------------------
+  - Colores principales definidos en reglas concretas (azules, fondos, rojos).
+    Para facilitar theming, considere extraer colores a variables CSS (:root) y
+    reemplazar valores hex por var(--primary-color) etc.
+  - Sombras, radios y espaciados son propensos a parametrización si se desea un
+    diseño consistente en toda la app.
+
+  Consideraciones de rendimiento y mantenimiento
+  ----------------------------------------------
+  - Agrupar y modularizar: separar estilos por componentes en archivos CSS/SCSS
+    individuales para facilitar mantenimiento.
+  - Evitar selectores excesivamente específicos; usar clases descriptivas (ya presentes)
+    para mejorar reusabilidad.
+  - Minimizar reglas globales que puedan chocar con librerías externas.
+
+  Animaciones y estados
+  ---------------------
+  - slideUpFade: animación simple para entrada de notificaciones. Mantenerla
+    corta (0.3s) para no interferir con la experiencia.
+  - Evitar animaciones excesivas en elementos que se repiten para mejorar rendimiento
+    en dispositivos móviles.
+
+  Sugerencias de mejora
+  ---------------------
+  - Agregar variables CSS para colores, radios y sombras para fácil theming.
+  - Añadir pautas de contraste en una documentación de diseño junto con tokens.
+  - Considerar soporte para dark mode (prefers-color-scheme) con variables.
+  - Añadir estados deshabilitados para botones e inputs (aria-disabled/disabled).
+  - Validaciones de formulario y mensajes inline accesibles (aria-invalid, aria-describedby).
+
+  Notas finales
+  ------------
+  Este bloque documenta el propósito, la estructura y las consideraciones clave
+  para mantener y extender los estilos de la aplicación. Use la estructura de clases
+  propuesta para mantener la semántica y accesibilidad en el HTML.
+*/
 body {
   margin: 0;
   font-family: sans-serif;
@@ -333,5 +495,5 @@ footer {
   to {
     opacity: 1;
     transform: translate(-50%, 0);
-  }
+       }
 }

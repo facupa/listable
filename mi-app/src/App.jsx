@@ -5,6 +5,97 @@ import "./App.css";
 
 const API_URL = "http://localhost:5000/api/tasks";
 
+/**
+ * Componente principal de la aplicación de tareas.
+ * Maneja autenticación, operaciones CRUD sobre tareas, estados de UI (formularios, toasts)
+ * y consideraciones de accesibilidad (canal auditivo con aria-live, controles ARIA).
+ *
+ * @function App
+ * @component
+ * @returns {JSX.Element} Render del gestor de tareas (login/registro si no hay token, UI principal si hay sesión).
+ *
+ * Estados principales (useState):
+ * @private {string|null} token - Token de autenticación almacenado en localStorage.
+ * @private {boolean} showRegister - Controla si se muestra el formulario de registro en lugar del login.
+ * @private {Array<Object>} tasks - Lista de tareas con forma { id, title, description, completed, createdAt, updatedAt }.
+ * @private {boolean} showForm - Muestra/oculta el formulario para crear una nueva tarea.
+ * @private {string} statusMessage - Mensaje de estado mostrado vía aria-live y toast visual.
+ * @private {string} title - Campo de título para nueva tarea.
+ * @private {string} description - Campo de descripción para nueva tarea.
+ * @private {string|null} editingId - Id de la tarea actualmente en modo edición (null si no hay).
+ * @private {string} editTitle - Título en el formulario de edición.
+ * @private {string} editDesc - Descripción en el formulario de edición.
+ *
+ * Referencias:
+ * @private {React.RefObject<HTMLInputElement>} editInputRef - Referencia al input de edición para manejo de foco.
+ *
+ * Efectos (useEffect):
+ * - Carga inicial de tareas: cuando cambia `token` y existe, se llama a loadTasks().
+ * - Enfoque de edición: cuando `editingId` cambia y hay referencia, se hace focus en el input de edición.
+ * - Auto-ocultado de notificación visual: cuando `statusMessage` se setea, se limpia automáticamente tras ~3000ms.
+ *
+ * Funciones de autenticación:
+ * @function handleLogin
+ * @param {string} newToken - Token recibido al iniciar sesión.
+ * @returns {void} Guarda token en localStorage, actualiza estado y muestra mensaje.
+ *
+ * @function handleLogout
+ * @returns {void} Elimina token de localStorage, limpia tareas y muestra mensaje de cierre de sesión.
+ *
+ * @function getAuthHeaders
+ * @returns {{ "Content-Type": string, Authorization: string }} Cabeceras con Content-Type JSON y Authorization Bearer.
+ *
+ * Operaciones CRUD / API:
+ * @async
+ * @function loadTasks
+ * @returns {Promise<void>} Recupera la lista de tareas desde API_URL con cabeceras auth; formatea _id → id; en 401/403 desloguea.
+ *
+ * @async
+ * @function handleAddTask
+ * @param {Event} e - Evento de submit del formulario.
+ * @returns {Promise<void>} Crea una nueva tarea mediante POST; al guardar, actualiza la lista local y muestra mensaje.
+ *
+ * @async
+ * @function toggleTask
+ * @param {string} id - Id de la tarea a actualizar.
+ * @param {boolean} currentCompleted - Estado actual de completado.
+ * @returns {Promise<void>} Alterna el campo `completed` mediante PATCH; actualiza la tarea local y muestra mensaje.
+ *
+ * @async
+ * @function handleDeleteTask
+ * @param {string} id - Id de la tarea a eliminar.
+ * @returns {Promise<void>} Elimina la tarea mediante DELETE; actualiza la lista local y muestra mensaje con el título eliminado.
+ *
+ * Lógica de edición:
+ * @function startEditing
+ * @param {{ id: string, title: string, description: string }} task - Tarea que se va a editar.
+ * @returns {void} Prepara el estado de edición (editingId, editTitle, editDesc) y limpia mensajes.
+ *
+ * @function cancelEditing
+ * @returns {void} Cancela el modo edición y notifica cancelación.
+ *
+ * @async
+ * @function saveEdit
+ * @param {string} id - Id de la tarea que se guarda.
+ * @returns {Promise<void>} Guarda cambios de título/descr mediante PATCH; actualiza la tarea local, cierra edición y muestra confirmación.
+ *
+ * Utilidades:
+ * @function formatDate
+ * @param {(string|number|Date|null|undefined)} d - Fecha a formatear.
+ * @returns {string} Cadena formateada en locale 'es-ES' (dd/mm/yyyy, hh:mm) o cadena vacía si no hay fecha.
+ *
+ * Accesibilidad y comportamiento UI:
+ * - Se mantiene un elemento invisible con role="status" y aria-live="polite" para lectores de pantalla (canal auditivo).
+ * - Se añade un toast visual flotante para feedback breve (canal visual), que se limpia automáticamente.
+ * - Botones y controles usan atributos ARIA relevantes (aria-expanded, aria-controls, aria-label) y etiquetas asociadas.
+ *
+ * Errores y logging:
+ * - Las operaciones asíncronas capturan errores y los registran en consola; en casos de fallo de conexión se muestra un mensaje de estado.
+ *
+ * Notas:
+ * - Se asume existencia de la constante API_URL en el alcance del módulo.
+ * - Las tareas recibidas del servidor usan _id; el componente mapea _id → id para uso en la UI.
+ */
 export default function App() {
   // --- ESTADOS DE AUTENTICACIÓN ---
   const [token, setToken] = useState(localStorage.getItem("token"));

@@ -38,6 +38,35 @@ const taskSchema = new mongoose.Schema({
 const Task = mongoose.model("Task", taskSchema);
 
 // --- MIDDLEWARE DE SEGURIDAD ---
+/**
+ * Middleware de Express que autentica peticiones mediante un token JWT enviado en la cabecera "Authorization".
+ *
+ * Comportamiento:
+ * - Extrae el token del header "Authorization" con el formato "Bearer <TOKEN>".
+ * - Si no existe token, responde con HTTP 401 (Unauthorized) y no continúa la cadena de middlewares.
+ * - Verifica el token usando jwt.verify con la clave JWT_SECRET.
+ * - Si la verificación falla, responde con HTTP 403 (Forbidden).
+ * - Si la verificación es exitosa, asigna el payload decodificado a `req.user` y llama a `next()` para continuar.
+ *
+ * Notas:
+ * - Requiere que la variable `JWT_SECRET` y el objeto `jwt` estén disponibles en el ámbito donde se usa este middleware.
+ * - El middleware asume que la cabecera Authorization sigue la forma "Bearer TOKEN".
+ *
+ * @param {import("express").Request} req - Objeto de petición de Express; se lee `req.headers.authorization`.
+ * @param {import("express").Response} res - Objeto de respuesta de Express; se usan `res.sendStatus(401|403)` para errores.
+ * @param {import("express").NextFunction} next - Función para pasar el control al siguiente middleware.
+ *
+ * @returns {void} No retorna un valor; o envía una respuesta de error o llama a `next()` tras asignar `req.user`.
+ *
+ * @throws {Error} Puede lanzar/propagar errores si `jwt.verify` falla por otras razones o si faltan configuraciones (p. ej. JWT_SECRET).
+ *
+ * @example
+ * // Header esperado:
+ * // Authorization: Bearer eyJhbGciOi...
+ *
+ * // Uso:
+ * // app.get('/ruta-protegida', authenticateToken, (req, res) => { res.json({ user: req.user }) });
+ */
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // "Bearer TOKEN"
